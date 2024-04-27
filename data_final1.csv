@@ -1,0 +1,7 @@
+,_id,product_name,UPC,Calories,Total Fat (g),Saturated Fat (g),Trans Fat (g),Cholesterol (mg),Sodium (mg),Total Carbohydrate (g),Dietary Fiber (g),Sugar (g),Added Sugar (g),Protein (g),Calcium (mg),Iron (mg),Potassium (mg),Vitamin D (mcg),Folic Acid (mcg),Niacin (%),Phosphorus (%),Thiamin (%),Vitamin A (%),Vitamin C (%),Zinc (%)
+0,662c392b47f1b0f494d8cd04,CHIPS AHOY! Chewy Hershey's Fudge Filled Soft Chocolate Chip Cookies,0004400007551,150,7,3,0,0,105,20,1,11,11,1,10,1.2,60,0,0,0,0,0,0,0,0
+1,66255fe91201b108f1cf2d5a,Kroger® Vanilla Lowfat Yogurt Tub,0001111010705,140,2.5,1.5,0,15,100,22,0,22,11,7,260,0,350,1.9,0,0,0,0,110,0,0
+2,66253b571201b108f1cf216d,Kroger® Garlic 3-Cheese Texas Toast,0001111088632,150,9,2.5,0,5,260,14,1,1,0,4,80,0.9,50,0,0,0,0,0,0,0,0
+3,662c392b47f1b0f494d8cd04,milk,0004400007551,250,7,3,0,0,105,20,1,11,11,1,10,1.2,60,0,0,0,0,0,0,0,0
+4,66255fe91201b108f1cf2d5a,bread,0001111010705,500,2.5,1.5,0,15,100,22,0,22,11,7,260,0,350,1.9,0,0,0,0,110,0,0
+5,66253b571201b108f1cf216d,corn,0001111088632,150,9,2.5,0,5,260,14,1,1,0,4,80,0.9,50,0,0,0,0,0,0,0,0
