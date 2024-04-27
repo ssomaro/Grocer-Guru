@@ -4,3 +4,4 @@ python-dotenv
 pymongo
 requests
 pdf2image
+pandas
