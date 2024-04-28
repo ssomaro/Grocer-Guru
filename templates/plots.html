@@ -8,50 +8,111 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            /* align-items: center; */
+            background: #f4f4f9;
+            color: #333;
+            overflow-x: hidden; /* Prevents horizontal scroll */
+        }
+        .chart-container p {
+            margin: 15px;
+            font-size: 16px;
+            color: #333;
         }
         #container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            /* max-width: 1200px; */
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         #header {
             text-align: center;
-            margin: 20px;
+            padding: 20px;
+            background: linear-gradient(145deg, #6db1bf, #006d77);
+            color: white;
+            border-radius: 8px;
         }
         #content {
             display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .chart-container {
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 10px;
+            flex: 1;
+            min-height: 400px;
+        }
+        /* .chart-container-summary {
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 10px;
+            flex: 1;
+            
+            text-align: left;
+        } */
+        .chart-container-summary {
+            padding: 10px; /* Padding for better readability */
+            background: #fdfdfd; /* Soft white background */
+            border: 1px solid #e1e1e8; /* Light grey border */
+            border-radius: 10px; /* Rounded corners */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Soft shadow */
+            margin: 10px;
+            flex :1;
+            
+            margin-left: auto; /* Center align the box */
+            margin-right: auto;
+            text-align: left;
+        }
+
+        .chart-container-summary p {
+            font-size: 18px; /* Slightly larger font for readability */
+            color: #333; /* Dark grey for good contrast */
+            line-height: 1.6; /* Comfortable line spacing */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* A more modern font stack */
+        }
+        table {
             width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
         }
-        #pie-chart-container {
-            width: 50%;
-            text-align: center;
+        th, td {
+            padding: 15px; /* Increased padding for more space */
+            text-align: left;
         }
-        #summary-text {
-            width: 50%;
-            padding: 20px;
-            box-sizing: border-box;
+        th {
+            background-color: #f8f8f8;
         }
-        #bar-charts-container {
-            width: 100%;
-            display: flex;
-            justify-content: space-around;
+        .navbar {
+            background-color: #006d77;
+            border-bottom: 3px solid #006d77;
+            padding: 0.5rem 1rem; /* Adjust padding */
         }
-        .bar-chart {
-            width: 45%; /* Adjust the width as needed */
-            margin-bottom: 20px;
+        .navbar-brand, .nav-link {
+            color: #fff !important;
+        }
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        /* Hover effects for table rows */
+        tr:hover {
+            background-color: #eef; /* Light hover effect for rows */
         }
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">My Charts</a>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="#">Grocer Guru</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -61,45 +122,43 @@
                     <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Link</a>
+                    <a class="nav-link" href="#">About</a>
                 </li>
             </ul>
         </div>
     </nav>
-    <div id ="container">
+    
+    <div id="container">
         <div id="header">
-            <h1>Your grocerry bag's nutritional overview</h1>
+            <h1>Your Grocery Bag's Nutritional Overview</h1>
+        </div>
+        <div id="summary-text" class="chart-container-summary" style="text-align: left;">
+            <p id="summaryTextContent">Loading summary...</p>
         </div>
         <div id="content">
-            <div id="pie-chart-container" style="border: 10px;padding: 5px;background-color: black;margin-left: 15px; border-radius: 10px;">
-                <div id="macrosPieChart" style=" border-radius: 10px;"></div>
+            <div class="chart-container" id="pie-chart-container">
+                <div id="macrosPieChart"></div>
             </div>
-            <div id="summary-text">
-                <p>Placeholder text for summary of nutrition. This text can be replaced with actual data or insights derived from the nutritional analysis. For example, you might summarize the average distribution of macros, highlight particular dietary considerations, or provide health tips based on the visualized data.</p>
+            <div class="chart-container" id="summary-table">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nutrient</th>
+                            <th>Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody id="nutrientTableBody">
+                        <!-- Rows will be added here dynamically -->
+                    </tbody>
+                </table>
             </div>
         </div>
         <div id="bar-charts-container">
-            <div id="topCaloriesBar" class="bar-chart"></div>
-            <div id="topProteinBar" class="bar-chart"></div>
-        </div>
-
-    </div>
-    <!-- <div id="header">
-        <h1>Nutritional Data Visualizations</h1>
-    </div>
-    <div id="content">
-        <div id="pie-chart-container">
-            <div id="macrosPieChart"></div>
-        </div>
-        <div id="summary-text">
-            <p>Placeholder text for summary of nutrition. This text can be replaced with actual data or insights derived from the nutritional analysis. For example, you might summarize the average distribution of macros, highlight particular dietary considerations, or provide health tips based on the visualized data.</p>
+            <div id="topCaloriesBar" class="chart-container"></div>
+            <div id="topProteinBar" class="chart-container"></div>
         </div>
     </div>
-    <div id="bar-charts-container">
-        <div id="topCaloriesBar" class="bar-chart"></div>
-        <div id="topProteinBar" class="bar-chart"></div>
-    </div> -->
-
+    
     <script>
         function drawGraph(endpoint, elementId) {
             fetch(endpoint)
@@ -109,10 +168,46 @@
                     Plotly.newPlot(elementId, graph.data, graph.layout);
                 });
         }
+        function populateNutritionalTable() {
+            fetch('/nutritional_summary')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('nutrientTableBody');
+                    tableBody.innerHTML = ''; // Clear existing rows
+                    data.forEach(nutrient => {
+                        const row = `<tr>
+                            <td>${nutrient.nutrient}</td>
+                            <td>${nutrient.amount.toFixed(2)}</td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+                });
+        }
+        function fetchSummaryText() {
+            fetch('/get_summary_text')
+                .then(response => {
+                    console.log(response);  // Check the raw response
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data);  // Check the parsed data
+                    const summaryText = document.getElementById('summaryTextContent');
+                    summaryText.innerHTML = data;  // Make sure 'text' is the correct key
+                })
+                .catch(error => {
+                    console.log('Error fetching summary text:', error);
+                    document.getElementById('summaryTextContent').innerHTML = 'Failed to load summary.';
+                });
+            }
 
-        drawGraph('/macros_pie_chart', 'macrosPieChart');
-        drawGraph('/top_calories_bar', 'topCaloriesBar');
-        drawGraph('/top_protein_bar', 'topProteinBar');
+
+        window.onload = function() {
+            drawGraph('/macros_pie_chart', 'macrosPieChart');
+            drawGraph('/top_calories_bar', 'topCaloriesBar');
+            drawGraph('/top_protein_bar', 'topProteinBar');
+            populateNutritionalTable();
+            fetchSummaryText();
+        };
     </script>
 </body>
 </html>
