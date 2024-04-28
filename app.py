@@ -3,6 +3,7 @@ from distutils.log import debug
 from fileinput import filename 
 from flask import *  
 from pdf2image import convert_from_path
+from pdf2image import convert_from_bytes
 import json
 import base64
 import requests
@@ -15,12 +16,11 @@ import plotly.express as px
 import plotly.io as pio
 from flask_cors import CORS
 
-
-
+global global_df 
+global_df = None 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MONGO_URI = os.getenv("MONGO_URI")
-
 app = Flask(__name__)
 CORS(app)
 
@@ -28,8 +28,10 @@ def encode_image(image_path):
   with open(image_path, "rb") as image_file:
     return base64.b64encode(image_file.read()).decode('utf-8')
   
-def get_data_from_image(filename):
-    base64_image = encode_image(filename)
+def get_data_from_image(image):
+    global global_df 
+    
+    base64_image = image
     headers = {  "Content-Type": "application/json","Authorization": f"Bearer {OPENAI_API_KEY}"}
     payload = {
     "model": "gpt-4-turbo",
@@ -90,18 +92,25 @@ def get_data_from_image(filename):
         query_result = collection.find_one({"UPC": upc})
         if query_result:
             data.append(query_result)
-    df = pd.DataFrame(data)
-    print(df)
-    df.to_csv('data_final1.csv')
+    global_df = pd.DataFrame(data)
+    columns_to_convert = ['Calories', 'Total Fat (g)', 'Cholesterol (mg)', 'Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)', 'Protein (g)', 'Sodium (mg)']
+    global_df = convert_columns_to_numeric(global_df, columns_to_convert)
+    # print(df)
+    # df.to_csv('data_final1.csv')
     
     print('ss')
     return items
-
+def convert_columns_to_numeric(df, columns):
+    for col in columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    return df
 @app.route('/get_summary_text')
 def get_summary():
-    ddf =pd.read_csv('data_final1.csv')
+    global global_df 
+    ddf = global_df
     text_table = ddf.to_string(index=False)
-    
+    print('chiii')
+    print(ddf)
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {OPENAI_API_KEY}"
@@ -136,7 +145,8 @@ def index():
 
 @app.route('/nutritional_summary')
 def nutritional_summary():
-    ddf =pd.read_csv('data_final1.csv')
+    global global_df 
+    ddf =global_df
     # Get the aggregated data similar to the pie chart
     aggregated_values = ddf[['Calories', 'Total Fat (g)', 'Cholesterol (mg)','Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)', 'Protein (g)','Sodium (mg)',]].sum()
     # Convert it into a list of dictionaries
@@ -151,18 +161,26 @@ def homepage():
 def aboutpage():
     return render_template('about.html')
   
-
+import io
 @app.route('/submit', methods=['GET', 'POST'])
 def submit():
     if request.method == 'POST' :
         print('hi')
         f = request.files['file'] 
-        f.save(f.filename)
+        # print(f)
+        # f.save(f.filename)
         #get filename
-        filename = f.filename
-        images = convert_from_path(filename)
-        images[0].save('page1' +'.jpg', 'JPEG')
-        get_data_from_image('page1.jpg')
+        # filename = f.filename
+        # images = convert_from_path(filename)
+        images = convert_from_bytes(f.read())
+        first_image = images[0]
+
+    # Convert to Base64 encoding
+        buffered = io.BytesIO()
+        first_image.save(buffered, format="JPEG")
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+        # images[0].save('page1' +'.jpg', 'JPEG')
+        get_data_from_image(img_str)
         render_template('plots.html')
         return render_template('plots.html')
 
@@ -170,22 +188,67 @@ def process_pdf(filepath):
     # Placeholder function for PDF processing logic
     print(f"Processing PDF at {filepath}")
     # Implement your PDF processing here using PyPDF2 or pdfplumber
+import plotly.graph_objects as go
 
+# @app.route('/macros_pie_chart')
+# def macros_pie_chart():
+#     ddf =pd.read_csv('data_final1.csv')
+#     macros = ddf[['Total Fat (g)', 'Saturated Fat (g)', 'Trans Fat (g)',
+#                   'Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)',
+#                  'Added Sugar (g)', 'Protein (g)']].sum().reset_index()
+#     # macros.loc[macros['index'] == 'Cholesterol (mg)', 0] /= 1000
+#     # macros.rename(columns={0: 'Value'}, inplace=True)
+#     # macros['index'] = macros['index'].replace('Cholesterol (mg)', 'Cholesterol (g)')
+#     #add the value in the pie chart
+#     # macros.loc[macros['index'] == 'Cholesterol (mg)', 1] /= 1000
+#     # macros['Nutrient'] = macros['Nutrient'].replace({'Cholesterol (mg)': 'Cholesterol (g)'})
+#     macros.columns = ['Nutrient', 'Value']
+#     fig = px.pie(macros, values='Value', names='Nutrient')
+#     fig.update_layout(title="Macronutrient Composition of Food Items")
+#     fig = go.Figure(data=[go.Pie(labels=labels, values=values, pull=[0, 0, 0.2, 0])])
+#     return jsonify(pio.to_json(fig))
 @app.route('/macros_pie_chart')
 def macros_pie_chart():
-    ddf =pd.read_csv('data_final1.csv')
-    macros = ddf[['Total Fat (g)', 'Saturated Fat (g)', 'Trans Fat (g)', 'Cholesterol (mg)',
-                  'Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)',
-                 'Added Sugar (g)', 'Protein (g)']].sum().reset_index()
+    import pandas as pd
+    import plotly.graph_objects as go
+    from flask import jsonify
+    import plotly.io as pio
+
+    global global_df 
+    if global_df is None:
+        return jsonify({"error": "Data not loaded yet"})
+
+    # Convert columns to numeric, assuming they might be read as strings
+    numeric_columns = ['Total Fat (g)', 'Saturated Fat (g)', 'Trans Fat (g)',
+                       'Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)',
+                       'Added Sugar (g)', 'Protein (g)']
+    for col in numeric_columns:
+        global_df[col] = pd.to_numeric(global_df[col], errors='coerce')
+
+    # Calculate the sum of the nutritional data
+    macros = global_df[numeric_columns].sum().reset_index()
     macros.columns = ['Nutrient', 'Value']
-    fig = px.pie(macros, values='Value', names='Nutrient')
-    fig.update_layout(title="Macronutrient Composition of Food Items")
+
+    # Define pull-out values for pie chart slices
+    pull_values = [0.1 if nutrient != 'Total Fat (g)' else 0.2 for nutrient in macros['Nutrient']]
+
+    # Create the figure using Plotly Graph Objects
+    fig = go.Figure(data=[go.Pie(labels=macros['Nutrient'], values=macros['Value'],
+                                 pull=pull_values, textinfo='percent+label')])
+    
+    # Update layout and title
+    fig.update_layout(title="Macronutrient Composition of Food Items", showlegend=False)
+  
+    # Return the figure as JSON
     return jsonify(pio.to_json(fig))
+
+
 
 
 @app.route('/top_calories_bar')
 def top_calories_bar():
-    ddf =pd.read_csv('data_final1.csv')
+    global global_df 
+    ddf = global_df
     top_calories = ddf.nlargest(3, 'Calories')
     # Melt the DataFrame to long format for Plotly, excluding 'Sodium (mg)'
     top_calories_long = pd.melt(top_calories, id_vars=['product_name'], value_vars=[
@@ -199,7 +262,8 @@ def top_calories_bar():
 
 @app.route('/top_protein_bar')
 def top_protein_bar():
-    ddf =pd.read_csv('data_final1.csv')
+    global global_df 
+    ddf =global_df
     top_protein = ddf.nlargest(3, 'Protein (g)')
     # Melt the DataFrame to long format for Plotly, excluding 'Sodium (mg)'
     top_protein_long = pd.melt(top_protein, id_vars=['product_name'], value_vars=[
