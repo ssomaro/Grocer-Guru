@@ -165,28 +165,31 @@
     </nav> -->
 
     <div class="container">
+        
         <div class="sidebar">
             <h3><i class="fas fa-file-upload"></i> Upload Your Receipt</h3>
             <p>Start your journey towards a healthier diet by uploading your grocery receipt here:</p>
             <form action="/submit" method="post" enctype="multipart/form-data">
                 <div class="file-upload-wrapper">
-                    <input type="file" name="file" id="file-upload" accept=".pdf" />
+                    <input type="file" name="file" id="file-upload" accept=".pdf" onchange="handleFileUpload()" />
                     <label for="file-upload" class="file-upload-label">
                         <i class="fas fa-cloud-upload-alt"></i>
                         Upload PDF
                     </label>
                 </div>
-                <button type="submit" class="submit-btn"><i class="fas fa-check-circle"></i> Click here to start analyzing!</button>
+                <div id="file-upload-feedback" class="alert" style="display: none;">PDF file uploaded successfully!</div>
+                <button type="submit" class="submit-btn" disabled><i class="fas fa-check-circle"></i> Click here to start analyzing!</button>
                 <div id="loading-spinner" class="spinner-overlay" style="display: none;">
                     <div class="spinner">
                         <div class="double-bounce1"></div>
                         <div class="double-bounce2"></div>
-                        <br>
                     </div>
-                    <p class="loading-text">Analyzing your receipts...</p> <!-- This is the text element -->
+                    <p class="loading-text">&nbsp  Analyzing your receipts... May take upto 20 seconds</p>
                 </div>
             </form>
         </div>
+        
+        
         
         <style>
             .sidebar {
@@ -378,6 +381,33 @@
             var submitButton = document.querySelector('.submit-btn');
             submitButton.addEventListener('click', function() {
                 document.getElementById('loading-spinner').style.display = 'flex';
+            });
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+            var fileInput = document.getElementById('file-upload');
+            var submitButton = document.querySelector('.submit-btn');
+            var feedbackText = document.getElementById('file-upload-feedback');
+            
+            fileInput.addEventListener('change', function() {
+                if (fileInput.files.length > 0 && fileInput.files[0].type === "application/pdf") {
+                    submitButton.disabled = false;
+                    feedbackText.style.display = 'block';
+                    feedbackText.textContent = 'PDF file ready to be analyzed!';
+                } else {
+                    submitButton.disabled = true;
+                    feedbackText.style.display = 'none';
+                }
+            });
+
+            submitButton.addEventListener('click', function() {
+                var spinner = document.getElementById('loading-spinner');
+                spinner.style.display = 'flex';
+                
+                // Change text after 5 seconds
+                setTimeout(function() {
+                    var loadingText = document.querySelector('.loading-text');
+                    loadingText.textContent = "Generating visuals...";
+                }, 9000);
             });
         });
         </script>
