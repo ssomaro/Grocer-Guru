@@ -146,7 +146,11 @@ def nutritional_summary():
 @app.route('/', methods=['GET', 'POST'])
 def homepage():
     return render_template('home.html')
-    
+
+@app.route('/about', methods=['GET', 'POST'])
+def aboutpage():
+    return render_template('about.html')
+  
 
 @app.route('/submit', methods=['GET', 'POST'])
 def submit():
