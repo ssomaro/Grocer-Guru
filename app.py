@@ -182,7 +182,8 @@ import io
 @app.route('/submit', methods=['GET', 'POST'])
 def submit():
     if request.method == 'POST' :
-        # f = request.files['file'] 
+        f = request.files['file'] 
+        print(f)
         # images = convert_from_bytes(f.read())
         # first_image = images[0]
 
