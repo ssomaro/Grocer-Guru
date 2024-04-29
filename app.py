@@ -14,7 +14,9 @@ from pymongo.server_api import ServerApi
 import pandas as pd
 import plotly.express as px
 import plotly.io as pio
-from flask_cors import CORS
+import plotly.graph_objects as go
+
+
 
 global global_df 
 global_df = None 
@@ -22,7 +24,7 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MONGO_URI = os.getenv("MONGO_URI")
 app = Flask(__name__)
-CORS(app)
+
 
 def encode_image(image_path):
   with open(image_path, "rb") as image_file:
@@ -202,11 +204,6 @@ import plotly.graph_objects as go
 
 @app.route('/macros_pie_chart')
 def macros_pie_chart():
-    import pandas as pd
-    import plotly.graph_objects as go
-    from flask import jsonify
-    import plotly.io as pio
-
     global global_df 
     if global_df is None:
         return jsonify({"error": "Data not loaded yet"})
