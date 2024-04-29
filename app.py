@@ -76,8 +76,22 @@ def get_data_from_image(image):
     "max_tokens": 2000
     }
     
-    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
-    items_json = response.json()['choices'][0]['message']['content']
+    # response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+    # items_json = response.json()['choices'][0]['message']['content']
+    items = {
+    "items": [
+        {
+        "name": "name1",
+        "upc": "upc1",
+        "link": "https://www.kroger.com/p/ make appropriate link"
+        },
+        {
+        "name": "name2",
+        "upc": "upc2",
+        "link": "https://www.kroger.com/p/ make appropriate link"
+        }
+        ]
+        }
     items = json.loads(items_json)
     upc_list = [item["upc"] for item in items["items"]]
     name_list = [item["name"] for item in items["items"]]
@@ -133,6 +147,7 @@ def get_summary():
 
     # Extract and print the JSON response
     items_json = response.json()
+    
     summary = items_json['choices'][0]['message']['content']
     return jsonify(summary)
 
