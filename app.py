@@ -15,7 +15,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.io as pio
 import plotly.graph_objects as go
-
+import logging
 
 
 global global_df 
@@ -24,7 +24,7 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MONGO_URI = os.getenv("MONGO_URI")
 app = Flask(__name__)
-
+app.logger.setLevel(logging.DEBUG)
 
 def encode_image(image_path):
   with open(image_path, "rb") as image_file:
@@ -92,10 +92,11 @@ def get_data_from_image(image):
         }
         ]
         }
-    items = json.loads(items_json)
-    upc_list = [item["upc"] for item in items["items"]]
-    name_list = [item["name"] for item in items["items"]]
-    
+    # items = json.loads(items_json)
+    print(items)
+    # upc_list = [item["upc"] for item in items["items"]]
+    # name_list = [item["name"] for item in items["items"]]
+    print(items)
     data = []
       # Create a new client and connect to the server
     client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
@@ -109,8 +110,8 @@ def get_data_from_image(image):
         if query_result:
             data.append(query_result)
     global_df = pd.DataFrame(data)
-    columns_to_convert = ['Calories', 'Total Fat (g)', 'Cholesterol (mg)', 'Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)', 'Protein (g)', 'Sodium (mg)']
-    global_df = convert_columns_to_numeric(global_df, columns_to_convert)
+    # columns_to_convert = ['Calories', 'Total Fat (g)', 'Cholesterol (mg)', 'Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)', 'Protein (g)', 'Sodium (mg)']
+    # global_df = convert_columns_to_numeric(global_df, columns_to_convert)
     
     return items
 def convert_columns_to_numeric(df, columns):
