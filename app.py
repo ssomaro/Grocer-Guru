@@ -16,7 +16,7 @@ import plotly.express as px
 import plotly.io as pio
 import plotly.graph_objects as go
 import logging
-
+import flask_cors
 
 global global_df 
 global_df = None 
@@ -25,6 +25,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MONGO_URI = os.getenv("MONGO_URI")
 app = Flask(__name__)
 app.logger.setLevel(logging.DEBUG)
+flask_cors.CORS(app)
 
 def encode_image(image_path):
   with open(image_path, "rb") as image_file:
@@ -76,27 +77,14 @@ def get_data_from_image(image):
     "max_tokens": 2000
     }
     
-    # response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
-    # items_json = response.json()['choices'][0]['message']['content']
-    items = {
-    "items": [
-        {
-        "name": "name1",
-        "upc": "upc1",
-        "link": "https://www.kroger.com/p/ make appropriate link"
-        },
-        {
-        "name": "name2",
-        "upc": "upc2",
-        "link": "https://www.kroger.com/p/ make appropriate link"
-        }
-        ]
-        }
-    # items = json.loads(items_json)
-    print(items)
-    # upc_list = [item["upc"] for item in items["items"]]
-    # name_list = [item["name"] for item in items["items"]]
-    print(items)
+    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+    items_json = response.json()['choices'][0]['message']['content']
+    
+    items = json.loads(items_json)
+    
+    upc_list = [item["upc"] for item in items["items"]]
+    name_list = [item["name"] for item in items["items"]]
+    
     data = []
       # Create a new client and connect to the server
     client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
@@ -110,8 +98,9 @@ def get_data_from_image(image):
         if query_result:
             data.append(query_result)
     global_df = pd.DataFrame(data)
-    # columns_to_convert = ['Calories', 'Total Fat (g)', 'Cholesterol (mg)', 'Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)', 'Protein (g)', 'Sodium (mg)']
-    # global_df = convert_columns_to_numeric(global_df, columns_to_convert)
+    columns_to_convert = ['Calories', 'Total Fat (g)', 'Cholesterol (mg)', 'Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)', 'Protein (g)', 'Sodium (mg)']
+    global_df = convert_columns_to_numeric(global_df, columns_to_convert)
+    global_df.to_csv('data.csv', index=False)
     
     return items
 def convert_columns_to_numeric(df, columns):
@@ -199,10 +188,12 @@ def submit():
     # Convert to Base64 encoding
         buffered = io.BytesIO()
         first_image.save(buffered, format="JPEG")
-        img_str = base64.b64encode(buffered.getvalue()).decode()
+        # img_str = base64.b64encode(buffered.getvalue()).decode()
         # images[0].save('page1' +'.jpg', 'JPEG')
-        get_data_from_image(img_str)
-        render_template('plots.html')
+        # get_data_from_image(img_str)
+        global global_df
+        global_df = pd.read_csv('data.csv')
+        # render_template('plots.html')
         return render_template('plots.html')
 
 @app.route('/macros_pie_chart')
