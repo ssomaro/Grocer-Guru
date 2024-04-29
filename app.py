@@ -182,13 +182,13 @@ import io
 @app.route('/submit', methods=['GET', 'POST'])
 def submit():
     if request.method == 'POST' :
-        f = request.files['file'] 
-        images = convert_from_bytes(f.read())
-        first_image = images[0]
+        # f = request.files['file'] 
+        # images = convert_from_bytes(f.read())
+        # first_image = images[0]
 
     # Convert to Base64 encoding
-        buffered = io.BytesIO()
-        first_image.save(buffered, format="JPEG")
+        # buffered = io.BytesIO()
+        # first_image.save(buffered, format="JPEG")
         # img_str = base64.b64encode(buffered.getvalue()).decode()
         # images[0].save('page1' +'.jpg', 'JPEG')
         # get_data_from_image(img_str)
