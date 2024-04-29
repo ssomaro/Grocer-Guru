@@ -13,7 +13,7 @@
             padding: 0;
             background: #f4f4f9;
             color: #333;
-            overflow-x: hidden; /* Prevents horizontal scroll */
+            overflow-x: hidden;
         }
         .chart-container p {
             margin: 15px;
@@ -21,7 +21,6 @@
             color: #333;
         }
         #container {
-            /* max-width: 1200px; */
             margin: 20px auto;
             padding: 20px;
             background: white;
@@ -49,36 +48,23 @@
             flex: 1;
             min-height: 400px;
         }
-        /* .chart-container-summary {
+        .chart-container-summary {
             padding: 10px;
-            background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: #fdfdfd;
+            border: 1px solid #e1e1e8;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             margin: 10px;
             flex: 1;
-            
-            text-align: left;
-        } */
-        .chart-container-summary {
-            padding: 10px; /* Padding for better readability */
-            background: #fdfdfd; /* Soft white background */
-            border: 1px solid #e1e1e8; /* Light grey border */
-            border-radius: 10px; /* Rounded corners */
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Soft shadow */
-            margin: 10px;
-            flex :1;
-            
-            margin-left: auto; /* Center align the box */
+            margin-left: auto;
             margin-right: auto;
             text-align: left;
         }
-
         .chart-container-summary p {
-            font-size: 18px; /* Slightly larger font for readability */
-            color: #333; /* Dark grey for good contrast */
-            line-height: 1.6; /* Comfortable line spacing */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* A more modern font stack */
+            font-size: 18px;
+            color: #333;
+            line-height: 1.6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         table {
             width: 100%;
@@ -86,7 +72,7 @@
             border-collapse: collapse;
         }
         th, td {
-            padding: 15px; /* Increased padding for more space */
+            padding: 15px;
             text-align: left;
         }
         th {
@@ -95,18 +81,22 @@
         .navbar {
             background-color: #006d77;
             border-bottom: 3px solid #006d77;
-            padding: 0.5rem 1rem; /* Adjust padding */
+            padding: 0.5rem 1rem;
         }
         .navbar-brand, .nav-link {
             color: #fff !important;
         }
-        /* Smooth scrolling */
         html {
             scroll-behavior: smooth;
         }
-        /* Hover effects for table rows */
         tr:hover {
-            background-color: #eef; /* Light hover effect for rows */
+            background-color: #eef;
+        }
+        .btn-nutritional-data {
+            margin-left: auto;
+            color: #fff;
+            background-color: #5cb85c;
+            border-color: #4cae4c;
         }
     </style>
 </head>
@@ -122,17 +112,22 @@
                     <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">About</a>
+                    <a class="nav-link" href="/about">About</a>
+                </li>
+                <!-- <li class="nav-item">
+                    <a class="nav-link" href="/raw_data">Get your nutritional data</a>
+                </li> -->
+                <li class="nav-item">
+                    <a class="nav-link btn btn-nutritional-data" href="/raw_data">View Your Nutritional Data</a>
                 </li>
             </ul>
         </div>
     </nav>
-    
     <div id="container">
         <div id="header">
             <h1>Your Grocery Bag's Nutritional Overview</h1>
         </div>
-        <div id="summary-text" class="chart-container-summary" style="text-align: left;">
+        <div id="summary-text" class="chart-container-summary">
             <p id="summaryTextContent">Loading summary...</p>
         </div>
         <div id="content">
@@ -144,7 +139,7 @@
                     <thead>
                         <tr>
                             <th>Nutrient</th>
-                            <th>Quantity</th>
+                            <th> Total Quantity</th>
                         </tr>
                     </thead>
                     <tbody id="nutrientTableBody">
@@ -173,7 +168,7 @@
                 .then(response => response.json())
                 .then(data => {
                     const tableBody = document.getElementById('nutrientTableBody');
-                    tableBody.innerHTML = ''; // Clear existing rows
+                    tableBody.innerHTML = '';
                     data.forEach(nutrient => {
                         const row = `<tr>
                             <td>${nutrient.nutrient}</td>
@@ -186,21 +181,19 @@
         function fetchSummaryText() {
             fetch('/get_summary_text')
                 .then(response => {
-                    console.log(response);  // Check the raw response
+                    console.log(response);
                     return response.json();
                 })
                 .then(data => {
-                    console.log(data);  // Check the parsed data
+                    console.log(data);
                     const summaryText = document.getElementById('summaryTextContent');
-                    summaryText.innerHTML = data;  // Make sure 'text' is the correct key
+                    summaryText.innerHTML = data;
                 })
                 .catch(error => {
                     console.log('Error fetching summary text:', error);
                     document.getElementById('summaryTextContent').innerHTML = 'Failed to load summary.';
                 });
-            }
-
-
+        }
         window.onload = function() {
             drawGraph('/macros_pie_chart', 'macrosPieChart');
             drawGraph('/top_calories_bar', 'topCaloriesBar');

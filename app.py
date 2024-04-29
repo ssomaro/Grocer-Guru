@@ -153,6 +153,19 @@ def nutritional_summary():
     nutrients = [{'nutrient': nutrient, 'amount': float(amount)} for nutrient, amount in aggregated_values.items()]
     return jsonify(nutrients)
 
+@app.route('/raw_data')
+def raw_data():
+    global global_df 
+    df = global_df[[ 'product_name','Calories', 'Total Fat (g)',
+       'Saturated Fat (g)', 'Trans Fat (g)', 'Cholesterol (mg)', 'Sodium (mg)',
+       'Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)',
+       'Added Sugar (g)', 'Protein (g)', 'Calcium (mg)', 'Iron (mg)',
+       'Potassium (mg)', 'Vitamin D (mcg)', 'Folic Acid (mcg)', 'Niacin (%)',
+       'Phosphorus (%)', 'Thiamin (%)', 'Vitamin A (%)', 'Vitamin C (%)',
+       'Zinc (%)']]
+    return render_template('raw_data.html', tables=[df.to_html(classes='data', header="true")])
+
+
 @app.route('/', methods=['GET', 'POST'])
 def homepage():
     return render_template('home.html')
@@ -167,11 +180,7 @@ def submit():
     if request.method == 'POST' :
         print('hi')
         f = request.files['file'] 
-        # print(f)
-        # f.save(f.filename)
-        #get filename
-        # filename = f.filename
-        # images = convert_from_path(filename)
+      
         images = convert_from_bytes(f.read())
         first_image = images[0]
 
@@ -190,23 +199,7 @@ def process_pdf(filepath):
     # Implement your PDF processing here using PyPDF2 or pdfplumber
 import plotly.graph_objects as go
 
-# @app.route('/macros_pie_chart')
-# def macros_pie_chart():
-#     ddf =pd.read_csv('data_final1.csv')
-#     macros = ddf[['Total Fat (g)', 'Saturated Fat (g)', 'Trans Fat (g)',
-#                   'Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)',
-#                  'Added Sugar (g)', 'Protein (g)']].sum().reset_index()
-#     # macros.loc[macros['index'] == 'Cholesterol (mg)', 0] /= 1000
-#     # macros.rename(columns={0: 'Value'}, inplace=True)
-#     # macros['index'] = macros['index'].replace('Cholesterol (mg)', 'Cholesterol (g)')
-#     #add the value in the pie chart
-#     # macros.loc[macros['index'] == 'Cholesterol (mg)', 1] /= 1000
-#     # macros['Nutrient'] = macros['Nutrient'].replace({'Cholesterol (mg)': 'Cholesterol (g)'})
-#     macros.columns = ['Nutrient', 'Value']
-#     fig = px.pie(macros, values='Value', names='Nutrient')
-#     fig.update_layout(title="Macronutrient Composition of Food Items")
-#     fig = go.Figure(data=[go.Pie(labels=labels, values=values, pull=[0, 0, 0.2, 0])])
-#     return jsonify(pio.to_json(fig))
+
 @app.route('/macros_pie_chart')
 def macros_pie_chart():
     import pandas as pd
@@ -252,8 +245,7 @@ def top_calories_bar():
     top_calories = ddf.nlargest(3, 'Calories')
     # Melt the DataFrame to long format for Plotly, excluding 'Sodium (mg)'
     top_calories_long = pd.melt(top_calories, id_vars=['product_name'], value_vars=[
-        'Total Fat (g)',  'Cholesterol (mg)',
-        'Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)', 'Protein (g)'
+        'Total Fat (g)',   'Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)', 'Protein (g)'
     ], var_name='Nutrient', value_name='Amount')
     fig = px.bar(top_calories_long, x='Amount', y='product_name', color='Nutrient', orientation='h',
                  title="Top 3 Calorie-Rich Foods by Nutrient Composition")
@@ -267,13 +259,21 @@ def top_protein_bar():
     top_protein = ddf.nlargest(3, 'Protein (g)')
     # Melt the DataFrame to long format for Plotly, excluding 'Sodium (mg)'
     top_protein_long = pd.melt(top_protein, id_vars=['product_name'], value_vars=[
-        'Total Fat (g)',  'Cholesterol (mg)',
-        'Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)', 'Protein (g)'
+        'Total Fat (g)', 'Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)', 'Protein (g)'
     ], var_name='Nutrient', value_name='Amount')
     fig = px.bar(top_protein_long, x='Amount', y='product_name', color='Nutrient', orientation='h',
                  title="Top 3 Protein-Rich Foods by Nutrient Composition")
     fig.update_layout(title="Top 3 Protein-Rich Foods by Nutrient Composition", xaxis_title="Quantity", yaxis_title="Product Name")
     return jsonify(fig.to_json())
+@app.route('/additional_data')
+def additional_data():
+    global global_df
+    if global_df is None:
+        return jsonify({"error": "Data not loaded yet"})
+    
+    # Convert DataFrame to JSON
+    data = global_df.to_json(orient="records")
+    return jsonify(json.loads(data))
 
 # Main Driver Function 
 if __name__ == '__main__':
