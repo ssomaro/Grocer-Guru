@@ -184,10 +184,12 @@ def submit():
     if request.method == 'POST' :
         f = request.files['file'] 
         print(f)
-        images = convert_from_bytes(f.read())
-        first_image = images[0]
-
-    # Convert to Base64 encoding
+        try:
+            images = convert_from_bytes(f.read())
+            first_image = images[0]
+        except Exception as e:
+            app.logger.error(f"Error processing the image: {str(e)}")
+            return str(e), 500 
         buffered = io.BytesIO()
         first_image.save(buffered, format="JPEG")
         # img_str = base64.b64encode(buffered.getvalue()).decode()
