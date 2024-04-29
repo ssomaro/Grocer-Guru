@@ -75,17 +75,17 @@ def get_data_from_image(image):
     ],
     "max_tokens": 2000
     }
-    print('jj')
+    
     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
     items_json = response.json()['choices'][0]['message']['content']
     items = json.loads(items_json)
     upc_list = [item["upc"] for item in items["items"]]
     name_list = [item["name"] for item in items["items"]]
-    print(upc_list)
+    
     data = []
       # Create a new client and connect to the server
     client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
-    print('jj')
+    
     # Specify the database and collection
     db = client["nutritionalValue"]
     collection = db["scrapedData_v2"]
@@ -97,10 +97,7 @@ def get_data_from_image(image):
     global_df = pd.DataFrame(data)
     columns_to_convert = ['Calories', 'Total Fat (g)', 'Cholesterol (mg)', 'Total Carbohydrate (g)', 'Dietary Fiber (g)', 'Sugar (g)', 'Protein (g)', 'Sodium (mg)']
     global_df = convert_columns_to_numeric(global_df, columns_to_convert)
-    # print(df)
-    # df.to_csv('data_final1.csv')
     
-    print('ss')
     return items
 def convert_columns_to_numeric(df, columns):
     for col in columns:
@@ -111,8 +108,7 @@ def get_summary():
     global global_df 
     ddf = global_df
     text_table = ddf.to_string(index=False)
-    print('chiii')
-    print(ddf)
+   
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {OPENAI_API_KEY}"
@@ -180,9 +176,7 @@ import io
 @app.route('/submit', methods=['GET', 'POST'])
 def submit():
     if request.method == 'POST' :
-        print('hi')
         f = request.files['file'] 
-      
         images = convert_from_bytes(f.read())
         first_image = images[0]
 
@@ -194,13 +188,6 @@ def submit():
         get_data_from_image(img_str)
         render_template('plots.html')
         return render_template('plots.html')
-
-def process_pdf(filepath):
-    # Placeholder function for PDF processing logic
-    print(f"Processing PDF at {filepath}")
-    # Implement your PDF processing here using PyPDF2 or pdfplumber
-import plotly.graph_objects as go
-
 
 @app.route('/macros_pie_chart')
 def macros_pie_chart():
