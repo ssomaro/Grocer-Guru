@@ -2,8 +2,6 @@
 from distutils.log import debug 
 from fileinput import filename 
 from flask import *  
-from pdf2image import convert_from_path
-from pdf2image import convert_from_bytes
 import json
 import base64
 import requests
@@ -17,7 +15,10 @@ import plotly.io as pio
 import plotly.graph_objects as go
 import logging
 import flask_cors
-
+import fitz  # PyMuPDF
+from io import BytesIO
+from PIL import Image
+import io
 global global_df 
 global_df = None 
 load_dotenv()
@@ -30,7 +31,7 @@ flask_cors.CORS(app)
 def encode_image(image_path):
   with open(image_path, "rb") as image_file:
     return base64.b64encode(image_file.read()).decode('utf-8')
-  
+
 def get_data_from_image(image):
     global global_df 
     
@@ -78,10 +79,11 @@ def get_data_from_image(image):
     }
     
     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+    print(response.json())
     items_json = response.json()['choices'][0]['message']['content']
     
     items = json.loads(items_json)
-    
+    print(items)
     upc_list = [item["upc"] for item in items["items"]]
     name_list = [item["name"] for item in items["items"]]
     
@@ -107,6 +109,47 @@ def convert_columns_to_numeric(df, columns):
     for col in columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
     return df
+
+
+@app.route('/submit', methods=['GET', 'POST'])
+def submit():
+    if request.method == 'POST' :
+        f = request.files['file'] 
+        print(f)
+        try:
+            doc = fitz.open("pdf", f.read())
+            if len(doc) == 1:
+                page = doc[0]  # Get the first and only page
+                pix = page.get_pixmap()  # Render page to an image
+                
+                # Convert the pixmap to an image file like object using Pillow
+                img = Image.open(BytesIO(pix.tobytes("png")))
+                
+                # Save the image to a bytes buffer instead of disk
+                img_bytes = BytesIO()
+                img.save(img_bytes, format='PNG')
+                img_bytes.seek(0)
+                  # Save image as PNG
+            else:
+                return "Error: PDF should contain exactly one page"
+            doc.close()
+            # images = convert_from_bytes(f.read())
+            # first_image = images[0]
+        except Exception as e:
+            app.logger.error(f"Error processing the image: {str(e)}")
+            return str(e), 500 
+        # buffered = io.BytesIO()
+        # first_image.save(buffered, format="JPEG")
+        img_bytes.seek(0) 
+        img_base64 = base64.b64encode(img_bytes.read()).decode('utf-8')
+        # img_str = base64.b64encode(buffered.getvalue()).decode()
+        # images[0].save('page1' +'.jpg', 'JPEG')
+        get_data_from_image(img_base64)
+        # global global_df
+        # global_df = pd.read_csv('data.csv')
+        # render_template('plots.html')
+        return render_template('plots.html')
+
 @app.route('/get_summary_text')
 def get_summary():
     global global_df 
@@ -133,10 +176,10 @@ def get_summary():
     }
 
     # API request
-    # response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
 
     # Extract and print the JSON response
-    # items_json = response.json()
+    items_json = response.json()
     
     summary  =  '''{"summary": "The grocery items in your list are a mix of healthy and unhealthy choices. While some items are high in calories and fat, others are rich in protein and fiber. You should consider reducing your intake of sugar and sodium, and increase your consumption of fiber and protein. For example, you could swap out sugary snacks for fresh fruits and vegetables, and choose lean protein sources like chicken or fish. Overall, your grocery list could benefit from more variety and balance to improve your overall health and well-being."}'''
     # summary = items_json['choices'][0]['message']['content']
@@ -177,28 +220,7 @@ def homepage():
 @app.route('/about', methods=['GET', 'POST'])
 def aboutpage():
     return render_template('about.html')
-  
-import io
-@app.route('/submit', methods=['GET', 'POST'])
-def submit():
-    if request.method == 'POST' :
-        f = request.files['file'] 
-        print(f)
-        try:
-            images = convert_from_bytes(f.read())
-            first_image = images[0]
-        except Exception as e:
-            app.logger.error(f"Error processing the image: {str(e)}")
-            return str(e), 500 
-        buffered = io.BytesIO()
-        first_image.save(buffered, format="JPEG")
-        # img_str = base64.b64encode(buffered.getvalue()).decode()
-        # images[0].save('page1' +'.jpg', 'JPEG')
-        # get_data_from_image(img_str)
-        global global_df
-        global_df = pd.read_csv('data.csv')
-        # render_template('plots.html')
-        return render_template('plots.html')
+
 
 @app.route('/macros_pie_chart')
 def macros_pie_chart():
@@ -260,6 +282,8 @@ def top_protein_bar():
                  title="Top 3 Protein-Rich Foods by Nutrient Composition")
     fig.update_layout(title="Top 3 Protein-Rich Foods by Nutrient Composition", xaxis_title="Quantity", yaxis_title="Product Name")
     return jsonify(fig.to_json())
+
+
 @app.route('/additional_data')
 def additional_data():
     global global_df
