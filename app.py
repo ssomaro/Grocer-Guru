@@ -181,8 +181,7 @@ def get_summary():
     # Extract and print the JSON response
     items_json = response.json()
     
-    summary  =  '''{"summary": "The grocery items in your list are a mix of healthy and unhealthy choices. While some items are high in calories and fat, others are rich in protein and fiber. You should consider reducing your intake of sugar and sodium, and increase your consumption of fiber and protein. For example, you could swap out sugary snacks for fresh fruits and vegetables, and choose lean protein sources like chicken or fish. Overall, your grocery list could benefit from more variety and balance to improve your overall health and well-being."}'''
-    # summary = items_json['choices'][0]['message']['content']
+    summary = items_json['choices'][0]['message']['content']
     return jsonify(summary)
 
 
